@@ -257,10 +257,10 @@ Expr
     | Keyword_return O_Expr
     | Keyword_comptime Expr
     | IfExpr
-    | WhileExpr
-    | ForExpr
     | Block
-    | LabeledBlock
+//    | WhileExpr
+//    | ForExpr
+//    | LabeledBlock // 2 Lookahead!
 
 IfExpr
     : Keyword_if GroupedExpr O_PtrPayload SimpleExpr
@@ -281,6 +281,7 @@ LabeledBlock: BlockLabel Block
 SimpleExpr
     : BoolOrExpr
     | SimpleExpr UnwrapOp BoolOrExpr
+//    | SimpleExpr UnwrapOp Expr // Ambiguous!
 
 BoolOrExpr
     : BoolAndExpr
@@ -336,6 +337,7 @@ PrefixExpr
 SuffixExpr
     : PrimaryExpr
     | SuffixExpr SuffixOp
+//    | AsyncPrefix SuffixExpr FnCallArgumnets // Ambiguous!
 
 PrimaryExpr
     : Integer
@@ -451,13 +453,13 @@ FnProtoCC
     | %empty
 
 ParamDecl
-    : ParamDeclAttribute ParamType
-    | ParamDeclAttribute Identifier Colon ParamType
+    : ParamDeclAttribute Identifier Colon ParamType
+    | ParamDeclAttribute ParamType
 
 ParamType
-    : FnTypeExpr
-    | Keyword_var
+    : Keyword_var
     | Dot3
+    | FnTypeExpr
 
 ParamDeclAttribute
     : Keyword_noalias
@@ -467,8 +469,8 @@ ParamDeclAttribute
 FnProtoReturnType
     : FnTypeExpr
     | Keyword_var
-//    | ExclamationMark FnTypeExpr
-//    | ExclamationMark Keyword_var
+//    | ExclamationMark FnTypeExpr // Ambiguous!
+//    | ExclamationMark Keyword_var // Ambiguous!
 
 
 // Payloads
@@ -571,9 +573,9 @@ UnwrapOp
     | Keyword_catch O_Payload
 
 // Fn call specific
-// AsyncPrefix
-//     : Keyword_async
-//     | Keyword_async LArrow Expr RArrow
+AsyncPrefix
+    : Keyword_async
+    | Keyword_async LArrow Expr RArrow
 
 FnCallArgumnets: LParen L_Expr RParen
 
