@@ -337,7 +337,7 @@ PrefixExpr
 SuffixExpr
     : PrimaryExpr
     | SuffixExpr SuffixOp
-//    | AsyncPrefix SuffixExpr FnCallArgumnets // Ambiguous!
+//    | Keyword_async SuffixExpr FnCallArgumnets // Ambiguous!
 
 PrimaryExpr
     : Integer
@@ -571,11 +571,6 @@ SuffixOp
 UnwrapOp
     : Keyword_orelse
     | Keyword_catch O_Payload
-
-// Fn call specific
-AsyncPrefix
-    : Keyword_async
-    | Keyword_async LArrow Expr RArrow
 
 FnCallArgumnets: LParen L_Expr RParen
 
