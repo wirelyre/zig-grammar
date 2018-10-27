@@ -179,13 +179,15 @@ Root: ContainerMembers Eof
 // Top level
 ContainerMembers
     : TestDecl ContainerMembers
-    | ComptimeStatement ContainerMembers
+    | TopLevelComptime ContainerMembers
     | O_Pub TopLevelDecl ContainerMembers
     | O_Pub ContainerField Comma ContainerMembers
     | O_Pub ContainerField
     | %empty
 
 TestDecl: Keyword_test String Block
+
+TopLevelComptime: Keyword_comptime BlockStatement
 
 TopLevelDecl
     : FnDef
@@ -202,7 +204,7 @@ FnDef
     | Keyword_inline FnProto Block
     | Keyword_export FnProto Block
 
-FnProto: FnProtoCC Keyword_fn O_Identifier LParen L_ParamDecl RParen Placement FnProtoReturnType
+FnProto: FnTypePrefix FnProtoReturnType
 
 VarDecl: VarDeclAttribute Identifier DeclType Placement EqualInitExpr Semicolon
 
@@ -220,21 +222,24 @@ Statement
     | SuspendStatement
     | BlockStatement
     | SwitchExpr
-    | SimpleExpr Semicolon
+    | ExprStatement Semicolon
 
 DeferStatement: Defer Statement
 
 IfStatement
     : Keyword_if GroupedExpr O_PtrPayload Statement
     | Keyword_if GroupedExpr O_PtrPayload SimpleExpr Keyword_else O_Payload Statement
+    | Keyword_if GroupedExpr O_PtrPayload BlockStatement Keyword_else O_Payload Statement
 
 WhileStatement
     : O_BlockLabel O_Inline Keyword_while GroupedExpr O_PtrPayload WhileContinueExpr Statement
     | O_BlockLabel O_Inline Keyword_while GroupedExpr O_PtrPayload WhileContinueExpr SimpleExpr Keyword_else O_Payload Statement
+    | O_BlockLabel O_Inline Keyword_while GroupedExpr O_PtrPayload WhileContinueExpr BlockStatement Keyword_else O_Payload Statement
 
 ForStatement
     : O_BlockLabel O_Inline Keyword_for GroupedExpr O_PtrIndexPayload Statement
     | O_BlockLabel O_Inline Keyword_for GroupedExpr O_PtrIndexPayload SimpleExpr Keyword_else Statement
+    | O_BlockLabel O_Inline Keyword_for GroupedExpr O_PtrIndexPayload BlockStatement Keyword_else Statement
 
 ComptimeStatement: Keyword_comptime Statement
 
@@ -244,6 +249,16 @@ BlockStatement
     : Block
     | LabeledBlock
 
+ExprStatement
+    : SimpleExpr
+    | SimpleExpr UnwrapOp Expr
+    | SimpleExpr AssignOp Expr
+    | Keyword_continue O_BreakLabel
+    | Keyword_break O_BreakLabel O_Expr
+    | Keyword_return O_Expr
+    | Keyword_resume Expr
+    | Keyword_cancel Expr
+
 
 // Expressions
 AssignExpr
@@ -252,40 +267,42 @@ AssignExpr
 
 Expr
     : SimpleExpr
+    | SimpleExpr UnwrapOp Expr
     | Keyword_continue O_BreakLabel
     | Keyword_break O_BreakLabel O_Expr
     | Keyword_return O_Expr
     | Keyword_comptime Expr
+    | Keyword_resume Expr
+    | Keyword_cancel Expr
     | IfExpr
     | Block
-//    | WhileExpr
-//    | ForExpr
-//    | LabeledBlock // 2 Lookahead!
+    | WhileExpr    // 2 Lookahead! The first token could be an Ident and a label: `l: while ...`
+    | ForExpr      // 2 Lookahead! The first token could be an Ident and a label: `l: for ...`
+    | LabeledBlock // 2 Lookahead! The first token could be an Ident and a label: `l: {}`
+    | SwitchExpr
 
 IfExpr
-    : Keyword_if GroupedExpr O_PtrPayload SimpleExpr
+    : Keyword_if GroupedExpr O_PtrPayload Expr
     | Keyword_if GroupedExpr O_PtrPayload SimpleExpr Keyword_else O_Payload Expr
+    | Keyword_if GroupedExpr O_PtrPayload BlockStatement Keyword_else O_Payload Expr
 
 WhileExpr
-    : O_BlockLabel O_Inline Keyword_while GroupedExpr O_PtrPayload WhileContinueExpr SimpleExpr
+    : O_BlockLabel O_Inline Keyword_while GroupedExpr O_PtrPayload WhileContinueExpr Expr
     | O_BlockLabel O_Inline Keyword_while GroupedExpr O_PtrPayload WhileContinueExpr SimpleExpr Keyword_else O_Payload Expr
+    | O_BlockLabel O_Inline Keyword_while GroupedExpr O_PtrPayload WhileContinueExpr BlockStatement Keyword_else O_Payload Expr
 
 ForExpr
-    : O_BlockLabel O_Inline Keyword_for GroupedExpr O_PtrIndexPayload SimpleExpr
+    : O_BlockLabel O_Inline Keyword_for GroupedExpr O_PtrIndexPayload Expr
     | O_BlockLabel O_Inline Keyword_for GroupedExpr O_PtrIndexPayload SimpleExpr Keyword_else Expr
+    | O_BlockLabel O_Inline Keyword_for GroupedExpr O_PtrIndexPayload BlockStatement Keyword_else Expr
 
 SwitchExpr: Keyword_switch GroupedExpr LBrace L_SwitchProng RBrace
 
 LabeledBlock: BlockLabel Block
 
 SimpleExpr
-    : BoolOrExpr
-    | SimpleExpr UnwrapOp BoolOrExpr
-//    | SimpleExpr UnwrapOp Expr // Ambiguous!
-
-BoolOrExpr
     : BoolAndExpr
-    | BoolOrExpr Keyword_or BoolAndExpr
+    | SimpleExpr Keyword_or BoolAndExpr
 
 BoolAndExpr
     : CompareExpr
@@ -324,7 +341,7 @@ InitList
 
 FnTypeExpr
     : ErrorUnionExpr
-    | FnProtoCC Keyword_fn LParen L_ParamDecl RParen ErrorUnionExpr
+    | FnTypePrefix ErrorUnionExpr
 
 ErrorUnionExpr
     : PrefixExpr
@@ -337,7 +354,7 @@ PrefixExpr
 SuffixExpr
     : PrimaryExpr
     | SuffixExpr SuffixOp
-//    | Keyword_async SuffixExpr FnCallArgumnets // Ambiguous!
+    | AsyncPrefix SuffixExpr FnCallArgumnets // Ambiguous!
 
 PrimaryExpr
     : Integer
@@ -349,6 +366,8 @@ PrimaryExpr
     | Keyword_undefined
     | Keyword_error
     | Keyword_unreachable
+    | Keyword_null
+    | Keyword_promise
     | Identifier
     | BuiltinIdentifier FnCallArgumnets
     | GroupedExpr
@@ -547,6 +566,8 @@ MultiplyOp
     | Asterisk2
     | AsteriskPercent
 
+FnTypePrefix: FnProtoCC Keyword_fn O_Identifier LParen L_ParamDecl RParen Placement
+
 PrefixOp
     : ExclamationMark
     | Minus
@@ -571,6 +592,10 @@ SuffixOp
 UnwrapOp
     : Keyword_orelse
     | Keyword_catch O_Payload
+
+AsyncPrefix
+     : Keyword_async
+     | Keyword_async LArrow Expr RArrow
 
 FnCallArgumnets: LParen L_Expr RParen
 
