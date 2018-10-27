@@ -354,7 +354,7 @@ PrefixExpr
 SuffixExpr
     : PrimaryExpr
     | SuffixExpr SuffixOp
-    | AsyncPrefix SuffixExpr FnCallArgumnets // Ambiguous!
+//    | AsyncPrefix SuffixExpr FnCallArgumnets // Ambiguous!
 
 PrimaryExpr
     : Integer
