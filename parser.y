@@ -214,6 +214,7 @@ ContainerField: Identifier DeclType EqualInitExpr
 // Statements
 Statement
     : VarDecl
+    | Keyword_comptime VarDecl
     | DeferStatement
     | IfStatement
     | WhileStatement
@@ -241,9 +242,14 @@ ForStatement
     | O_BlockLabel O_Inline Keyword_for GroupedExpr O_PtrIndexPayload SimpleExpr Keyword_else Statement
     | O_BlockLabel O_Inline Keyword_for GroupedExpr O_PtrIndexPayload BlockStatement Keyword_else Statement
 
-ComptimeStatement: Keyword_comptime Statement
+ComptimeStatement
+    : Keyword_comptime BlockStatement
+    | Keyword_comptime ExprStatement Semicolon
 
-SuspendStatement: Keyword_suspend Statement
+SuspendStatement
+    : Keyword_suspend BlockStatement
+    | Keyword_suspend Semicolon
+    | Keyword_suspend ExprStatement Semicolon
 
 BlockStatement
     : Block
