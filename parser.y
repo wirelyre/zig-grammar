@@ -325,8 +325,16 @@ AdditionExpr
     | AdditionExpr AdditionOp MultiplyExpr
 
 MultiplyExpr
-    : CurlySuffixExpr
-    | MultiplyExpr MultiplyOp CurlySuffixExpr
+    : PrimativePrefixExpr
+    | MultiplyExpr MultiplyOp PrimativePrefixExpr
+
+PrimativePrefixExpr
+    : PrimativePrefixOp PrimativePrefixExprChain
+    | CurlySuffixExpr
+
+PrimativePrefixExprChain
+    : PrimativePrefixOp PrefixExpr
+    | PrefixExpr
 
 CurlySuffixExpr
     : FnTypeExpr
@@ -354,7 +362,7 @@ PrefixExpr
 SuffixExpr
     : PrimaryExpr
     | SuffixExpr SuffixOp
-//    | AsyncPrefix SuffixExpr FnCallArgumnets // Ambiguous!
+    | AsyncPrefix SuffixExpr FnCallArgumnets // Ambiguous!
 
 PrimaryExpr
     : Integer
@@ -488,8 +496,8 @@ ParamDeclAttribute
 FnProtoReturnType
     : FnTypeExpr
     | Keyword_var
-//    | ExclamationMark FnTypeExpr // Ambiguous!
-//    | ExclamationMark Keyword_var // Ambiguous!
+    | ExclamationMark FnTypeExpr
+    | ExclamationMark Keyword_var
 
 
 // Payloads
@@ -566,14 +574,16 @@ MultiplyOp
     | Asterisk2
     | AsteriskPercent
 
-FnTypePrefix: FnProtoCC Keyword_fn O_Identifier LParen L_ParamDecl RParen Placement
-
-PrefixOp
+PrimativePrefixOp
     : ExclamationMark
     | Minus
     | Tilde
     | MinusPercent
-    | Ampersand
+
+FnTypePrefix: FnProtoCC Keyword_fn O_Identifier LParen L_ParamDecl RParen Placement
+
+PrefixOp
+    : Ampersand
     | QuestionMark
     | Keyword_try
     | Keyword_await
@@ -595,7 +605,7 @@ UnwrapOp
 
 AsyncPrefix
      : Keyword_async
-     | Keyword_async LArrow Expr RArrow
+     | Keyword_async LArrow FnTypeExpr RArrow
 
 FnCallArgumnets: LParen L_Expr RParen
 
