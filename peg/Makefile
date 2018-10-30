@@ -8,7 +8,10 @@ build:
 	mkdir build
 
 build/parser.c: parser.y
-	leg $^ > $@
+	peg $^ > $@
 
-build/parser: build/parser.c
+build/full.c: main.c build/parser.c
+	cat $^ > $@
+
+build/parser: build/full.c
 	gcc -o $@ $^
