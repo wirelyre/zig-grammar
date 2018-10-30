@@ -58,11 +58,11 @@ ForStatement
 
 BlockExprStatement
     <- BlockExpr
-     / Expr SEMICOLON
+     / AssignExpr SEMICOLON
 
 BlockOrExpr
     <- BlockExpr
-     / Expr
+     / AssignExpr
 
 # *** Expression Level ***
 AssignExpr <- Expr (AssignOp Expr)?
@@ -106,12 +106,16 @@ PrimaryExpr
      / ForExpr
      / GroupedExpr
      / IfExpr
-     / STRINGLITERAL
+     / KEYWORD_break BreakLabel? Expr?
+     / KEYWORD_comptime Expr
+     / KEYWORD_continue BreakLabel?
+     / KEYWORD_return Expr?
      / SwitchExpr
      / WhileExpr
      / BUILTININDENTIFIER FnCallArgumnets
      / CHAR_LITERAL
      / IDENTIFIER
+     / STRINGLITERAL
      / KEYWORD_anyerror
      / KEYWORD_error DOT IDENTIFIER
      / KEYWORD_false
@@ -120,7 +124,8 @@ PrimaryExpr
      / KEYWORD_true
      / KEYWORD_undefined
      / KEYWORD_unreachable
-     / NUMBER
+     / FLOAT
+     / INTEGER
 
 BlockExpr <- BlockLabel? Block
 
@@ -311,23 +316,23 @@ ContainerDeclType
 # Alignment
 ByteAlign <- KEYWORD_align GroupedExpr
 
-BitAlign <- KEYWORD_align LPAREN Expr COLON NUMBER COLON NUMBER RPAREN
+BitAlign <- KEYWORD_align LPAREN Expr COLON INTEGER COLON INTEGER RPAREN
 
 
 # *** Tokens ***
 eof <- !.
 hex <- [0-9a-fA-F]
 char_escape
-  <- "\\x" hex hex
-   / "\\u" hex hex hex hex
-   / "\\U" hex hex hex hex hex hex
-   / "\\" [nr\\t'"]
+    <- "\\x" hex hex
+     / "\\u" hex hex hex hex
+     / "\\U" hex hex hex hex hex hex
+     / "\\" [nr\\t'"]
 char_char
-  <- char_escape
-   / [^\\'\n]
+    <- char_escape
+     / [^\\'\n]
 string_char
-  <- char_escape
-   / [^\\"\n]
+    <- char_escape
+     / [^\\"\n]
 
 line_comment <- '//'[^\n]*
 line_string <- ("\\\\" [^\n]* [ \n]*)+
@@ -335,18 +340,23 @@ line_cstring <- ("c\\\\" [^\n]* [ \n]*)+
 skip <- ([ \n] / line_comment)*
 
 CHAR_LITERAL <- "'" char_char "'" skip
-NUMBER
-  <- "0b" [01]+        ("." [01]*        ([eE]   [-+]? [01]*)?)?        skip
-   / "0o" [0-7]+       ("." [0-7]*       ([eE]   [-+]? [0-7]*)?)?       skip
-   /      [0-9]+       ("." [0-9]*       ([eE]   [-+]? [0-9]*)?)?       skip
-   / "0x" [0-9a-fA-F]+ ("." [0-9a-fA-F]* ([eEpP] [-+]? [0-9a-fA-F]*)?)? skip
+FLOAT
+    <- "0b" [01]+  ("." [01]*)?  [eE] [-+]? [01]+  skip
+     / "0o" [0-7]+ ("." [0-7]*)? [eE] [-+]? [0-7]+ skip
+     / "0x" hex    ("." hex*)?   [pP] [-+]? hex+   skip
+     /      [0-9]+ ("." [0-9]*)? [eE] [-+]? [0-9]+ skip
+INTEGER
+    <- "0b" [01]+  skip
+     / "0o" [0-7]+ skip
+     / "0x" hex+   skip
+     /      [0-9]+ skip
 STRINGLITERAL
-  <- "c"? "\"" string_char* "\"" skip
-   / line_string skip
-   / line_cstring skip
+    <- "c"? "\"" string_char* "\"" skip
+     / line_string                 skip
+     / line_cstring                skip
 IDENTIFIER
-  <- !keyword ("c" !"\"\\" / [A-Zabd-z_]) [A-Za-z0-9_]* skip
-   / "@\"" string_char* "\"" skip
+    <- !keyword ("c" !"\"\\" / [A-Zabd-z_]) [A-Za-z0-9_]* skip
+     / "@\"" string_char* "\""                            skip
 BUILTININDENTIFIER <- "@"[A-Zabd-z_][A-Za-z0-9_]* skip
 
 
