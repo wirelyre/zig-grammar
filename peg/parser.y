@@ -1,4 +1,4 @@
-Root <- ContainerMembers eof
+Root <- skip ContainerMembers eof
 
 # *** Top level ***
 ContainerMembers
@@ -141,7 +141,7 @@ GroupedExpr <- LPAREN Expr RPAREN
 
 IfExpr <- KEYWORD_if GroupedExpr PtrPayload? Expr (KEYWORD_else Payload? Expr)?
 
-SwitchExpr <- KEYWORD_switch GroupedExpr LBRACE (SwitchProng (COMMA SwitchProng)* COMMA?)? LBRACE
+SwitchExpr <- KEYWORD_switch GroupedExpr LBRACE (SwitchProng (COMMA SwitchProng)* COMMA?)? RBRACE
 
 WhileExpr <- BlockLabel? KEYWORD_inline? KEYWORD_while GroupedExpr PtrPayload? WhileContinueExpr? Expr (KEYWORD_else Payload? Expr)?
 
@@ -242,6 +242,8 @@ BitwiseOp
     <- AMPERSAND
      / CARET
      / PIPE
+     / KEYWORD_orelse
+     / KEYWORD_catch Payload?
 
 BitShiftOp
     <- LARROW2
@@ -355,9 +357,9 @@ STRINGLITERAL
      / line_string                 skip
      / line_cstring                skip
 IDENTIFIER
-    <- !keyword ("c" !"\"\\" / [A-Zabd-z_]) [A-Za-z0-9_]* skip
-     / "@\"" string_char* "\""                            skip
-BUILTININDENTIFIER <- "@"[A-Zabd-z_][A-Za-z0-9_]* skip
+    <- !keyword ("c" !"\"\\" / [A-Za-z_]) [A-Za-z0-9_]* skip
+     / "@\"" string_char* "\""                          skip
+BUILTININDENTIFIER <- "@"[A-Za-z_][A-Za-z0-9_]* skip
 
 
 AMPERSAND            <- '&'      ![=]      skip
