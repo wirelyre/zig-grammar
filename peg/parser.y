@@ -95,8 +95,8 @@ PrefixExpr
      / SuffixExpr
 
 SuffixExpr
-    <- AsyncPrefix SuffixExpr FnCallArgumnets
-     / PrimaryExpr SuffixOp*
+    <- AsyncPrefix PrimaryExpr SuffixOp* FnCallArgumnets
+     / PrimaryExpr (SuffixOp / FnCallArgumnets)*
 
 PrimaryExpr
     <- AsmExpr
@@ -108,8 +108,10 @@ PrimaryExpr
      / GroupedExpr
      / IfExpr
      / KEYWORD_break BreakLabel? Expr?
+     / KEYWORD_cancel Expr
      / KEYWORD_comptime Expr
      / KEYWORD_continue BreakLabel?
+     / KEYWORD_resume Expr
      / KEYWORD_return Expr?
      / SwitchExpr
      / WhileExpr
@@ -278,8 +280,7 @@ PrefixOp
      / PtrStart PtrAttribute*
 
 SuffixOp
-    <- FnCallArgumnets
-     / LBRACKET Expr DOT2 Expr RBRACKET
+    <- LBRACKET Expr DOT2 Expr RBRACKET
      / LBRACKET Expr DOT2 RBRACKET
      / LBRACKET Expr RBRACKET
      / DOT IDENTIFIER
@@ -287,8 +288,8 @@ SuffixOp
      / DOTQUESTIONMARK
 
 AsyncPrefix
-    <- KEYWORD_async
-     / KEYWORD_async LARROW TypeExpr RARROW
+    <- KEYWORD_async LARROW TypeExpr RARROW
+     / KEYWORD_async
 
 FnCallArgumnets <- LPAREN (Expr (COMMA Expr)* COMMA?)? RPAREN
 
@@ -362,8 +363,8 @@ STRINGLITERAL
      / line_string                 skip
      / line_cstring                skip
 IDENTIFIER
-    <- !keyword ("c" !"\"\\" / [A-Za-z_]) [A-Za-z0-9_]* skip
-     / "@\"" string_char* "\""                          skip
+    <- !keyword ("c" !"\"\\" / [A-Zabd-z_]) [A-Za-z0-9_]* skip
+     / "@\"" string_char* "\""                            skip
 BUILTININDENTIFIER <- "@"[A-Za-z_][A-Za-z0-9_]* skip
 
 
