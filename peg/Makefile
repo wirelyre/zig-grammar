@@ -14,4 +14,4 @@ build/full.c: main.c build/parser.c
 	cat $^ > $@
 
 build/parser: build/full.c
-	gcc -o $@ $^
+	gcc -O3 -o $@ $^

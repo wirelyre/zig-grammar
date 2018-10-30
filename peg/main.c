@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+//#define YY_DEBUG
+
 int yyparse();
 
 int main() {

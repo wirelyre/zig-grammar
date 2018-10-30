@@ -103,6 +103,7 @@ PrimaryExpr
      / BlockExpr
      / ContainerDecl
      / ErrorSetDecl
+     / FnProto
      / ForExpr
      / GroupedExpr
      / IfExpr
@@ -114,8 +115,8 @@ PrimaryExpr
      / WhileExpr
      / BUILTININDENTIFIER FnCallArgumnets
      / CHAR_LITERAL
-     / IDENTIFIER
      / STRINGLITERAL
+     / IDENTIFIER
      / KEYWORD_anyerror
      / KEYWORD_error DOT IDENTIFIER
      / KEYWORD_false
