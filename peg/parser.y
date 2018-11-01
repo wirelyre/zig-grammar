@@ -386,7 +386,7 @@ DOTASTERISK          <- '.*'               skip
 DOTQUESTIONMARK      <- '.?'               skip
 EQUAL                <- '='      ![>=]     skip
 EQUALEQUAL           <- '=='               skip
-EQUALRARROW          <- '=>'     ![>]      skip
+EQUALRARROW          <- '=>'               skip
 EXCLAMATIONMARK      <- '!'      ![=]      skip
 EXCLAMATIONMARKEQUAL <- '!='               skip
 LARROW               <- '<'      ![<=]     skip
